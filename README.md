@@ -49,3 +49,12 @@ Point any QR generator at your hosted URL — e.g. <https://www.qrcode-monkey.co
 
 Open the page on your phone, run through the quiz, and tap the WhatsApp button —
 it should open a chat with *your own* number with the message pre-filled.
+
+## How this is published
+
+The live site is served from the `gh-pages` branch (root `index.html`).
+To update the page: edit `index.html` on `main`, then copy it to `gh-pages` and push:
+
+```bash
+git checkout gh-pages && git checkout main -- index.html && git commit -am "Update page" && git push && git checkout main
+```
