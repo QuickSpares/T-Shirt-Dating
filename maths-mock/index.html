@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="robots" content="noindex" />
+<meta name="theme-color" content="#0f3d5c" />
+<title>AQA-style Core Maths — Mock Exam Trainer</title>
+<style>
+  :root {
+    --bg: #f4f7fb;
+    --panel: #ffffff;
+    --ink: #16232e;
+    --muted: #5c6b78;
+    --line: #dfe6ee;
+    --brand: #0f3d5c;
+    --brand-2: #1f7a99;
+    --good: #1f8a4c;
+    --good-bg: #e7f6ec;
+    --bad: #c02b3a;
+    --bad-bg: #fdecee;
+    --warn: #b5730c;
+    --warn-bg: #fdf3e3;
+    --accent: #ffcf33;
+    --radius: 16px;
+    --shadow: 0 6px 20px rgba(16,45,64,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 0 0 40px;
+    min-height: 100dvh;
+  }
+  .wrap { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 14px; }
+
+  header.top {
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    color: #fff;
+    padding: 18px 0 16px;
+    box-shadow: var(--shadow);
+    position: sticky; top: 0; z-index: 20;
+  }
+  header.top .wrap { display: flex; align-items: center; gap: 12px; }
+  header.top .logo {
+    font-weight: 800; font-size: 1.05rem; letter-spacing: 0.3px;
+    display: flex; flex-direction: column; line-height: 1.15;
+  }
+  header.top .logo small { font-weight: 500; font-size: 0.72rem; opacity: 0.85; letter-spacing: 0; }
+  header.top .spacer { flex: 1; }
+  .pill {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+    color: #fff; font-size: 0.78rem; font-weight: 600; padding: 6px 11px; border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .screen { display: none; animation: fade 0.25s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px);} to {opacity:1; transform:none;} }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px; margin-top: 16px;
+  }
+  h1 { font-size: 1.5rem; line-height: 1.25; margin-bottom: 8px; }
+  h2 { font-size: 1.2rem; margin-bottom: 10px; }
+  h3 { font-size: 1rem; margin-bottom: 6px; }
+  p { margin-bottom: 10px; }
+  .muted { color: var(--muted); font-size: 0.92rem; }
+  ul.tight { margin: 6px 0 6px 20px; }
+  ul.tight li { margin-bottom: 5px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 15px 18px; margin-top: 10px;
+    font-size: 1rem; font-weight: 700; font-family: inherit;
+    border-radius: 14px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink); cursor: pointer;
+    transition: transform 0.1s ease, background 0.15s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .btn.accent { background: var(--accent); color: #3a2e00; border-color: #e6b800; }
+  .btn.subtle { background: #eef3f8; }
+  .btn.mini { width: auto; padding: 9px 14px; font-size: 0.85rem; margin-top: 0; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { margin-top: 10px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Question screen */
+  .qmeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tag { font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+         background: #eaf1f7; color: var(--brand); }
+  .tag.marks { background: #fff6d6; color: #8a6d00; }
+  .progressbar { height: 8px; background: #e6edf4; border-radius: 6px; overflow: hidden; margin-bottom: 6px; }
+  .progressbar > div { height: 100%; background: linear-gradient(90deg, var(--brand-2), var(--brand)); transition: width 0.3s; }
+
+  .qtext { font-size: 1.08rem; margin-bottom: 8px; }
+  .qtext .data { display: inline-block; background: #f0f5f9; border: 1px solid var(--line);
+                 border-radius: 8px; padding: 2px 8px; font-weight: 600; }
+  .datablock { background: #f0f5f9; border: 1px solid var(--line); border-radius: 10px;
+               padding: 10px 12px; margin: 10px 0; font-size: 0.95rem; }
+
+  .answer-line { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; }
+  .answer-line label { font-weight: 700; font-size: 0.92rem; white-space: nowrap; }
+  .ansfield {
+    flex: 1; font-size: 1.3rem; font-weight: 700; text-align: center;
+    padding: 12px; border: 2px solid var(--line); border-radius: 12px;
+    background: #fff; color: var(--ink); min-height: 52px; letter-spacing: 0.5px;
+  }
+  .ansfield.focus { border-color: var(--brand-2); }
+  .unit { font-weight: 700; color: var(--muted); }
+
+  /* Choice options */
+  .choice { text-align: left; margin-top: 8px; }
+  .choice.sel { border-color: var(--brand); background: #eef5fa; }
+
+  /* On-screen keypad */
+  .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .key {
+    padding: 15px 0; font-size: 1.15rem; font-weight: 700; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .key:active { transform: scale(0.94); background: #eef3f8; }
+  .key.wide { grid-column: span 2; }
+  .key.act { background: #eef3f8; }
+  .key.del { background: #fdecee; color: var(--bad); }
+
+  /* Handwriting scratchpad */
+  .padwrap { margin-top: 14px; border: 1px dashed var(--brand-2); border-radius: 12px; overflow: hidden; }
+  .padhead { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #eef5fa; font-size: 0.85rem; font-weight: 700; color: var(--brand); }
+  .padhead .spacer { flex: 1; }
+  canvas#pad { display: block; width: 100%; height: 220px; background:
+    repeating-linear-gradient(#fff, #fff 27px, #eef3f8 28px); touch-action: none; }
+  .padtools .btn.mini { margin-left: 6px; }
+
+  /* Feedback */
+  .verdict { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem;
+             padding: 12px 14px; border-radius: 12px; margin-top: 14px; }
+  .verdict.good { background: var(--good-bg); color: var(--good); }
+  .verdict.bad { background: var(--bad-bg); color: var(--bad); }
+  .fbsec { margin-top: 12px; }
+  .fbsec h3 { display: flex; align-items: center; gap: 6px; }
+  .worked { background: #f7fafc; border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 0.95rem; }
+  .worked ol { margin-left: 18px; }
+  .worked li { margin-bottom: 4px; }
+  .pitfalls { background: var(--warn-bg); border: 1px solid #f0dcb4; border-radius: 10px; padding: 12px; }
+  .pitfalls li { margin-bottom: 5px; }
+  .linkbox a { display: inline-block; color: var(--brand-2); font-weight: 700; text-decoration: none;
+               border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin: 6px 6px 0 0; font-size: 0.9rem; }
+  .linkbox a:active { background: #eef3f8; }
+
+  /* Results */
+  .scorebig { font-size: 3rem; font-weight: 800; color: var(--brand); text-align: center; }
+  .scoresub { text-align: center; color: var(--muted); margin-bottom: 10px; }
+  .topicrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .topicrow:last-child { border-bottom: none; }
+  .topicrow .name { flex: 1; font-weight: 600; font-size: 0.95rem; }
+  .bar { width: 90px; height: 8px; background: #e6edf4; border-radius: 5px; overflow: hidden; }
+  .bar > div { height: 100%; }
+  .badge { font-size: 0.72rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .badge.ok { background: var(--good-bg); color: var(--good); }
+  .badge.work { background: var(--warn-bg); color: var(--warn); }
+
+  .plan-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .plan-item h3 { color: var(--brand); }
+  .checkline { display: flex; align-items: flex-start; gap: 10px; margin-top: 8px; }
+  .checkline input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+  .checkline label { font-size: 0.92rem; }
+  .checkline.done label { text-decoration: line-through; color: var(--muted); }
+
+  .logentry { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .logentry .row { display: flex; align-items: center; gap: 8px; }
+  .logentry .date { font-weight: 700; }
+  .logentry .spacer { flex: 1; }
+
+  .note { font-size: 0.82rem; color: var(--muted); margin-top: 14px; }
+  .note a { color: var(--brand-2); }
+  footer.foot { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 24px; padding: 0 14px; }
+  hr.sep { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo">Core Maths Mock Trainer<small>AQA-style · Level 3 Mathematical Studies (1350)</small></div>
+    <div class="spacer"></div>
+    <div class="pill" id="headPill">Ready</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ START ============ -->
+  <section class="screen active" id="scr-start">
+    <div class="card">
+      <h1>📝 Mock exam trainer</h1>
+      <p class="muted">Practice questions in the style of the <strong>AQA Level 3 Mathematical Studies (Core Maths, 1350)</strong> paper. Answer on screen, tap <strong>Check answer</strong>, and get a full worked solution telling you exactly where you went wrong — then a personal study plan and a training log.</p>
+      <button class="btn primary" onclick="startMock('full')">▶️ Start full mock (<span id="qCount"></span> questions)</button>
+      <div class="btn-row">
+        <button class="btn subtle" onclick="show('scr-log')">📓 Training log</button>
+        <button class="btn subtle" onclick="show('scr-about')">ℹ️ How it works</button>
+      </div>
+      <p class="note">Works on iPad and phone. You can type with the on-screen keypad and use the handwriting pad to show your working. No data leaves your device — everything is saved locally in your browser.</p>
+    </div>
+    <div class="card" id="realPaperCard">
+      <h3>📄 Want the real past paper?</h3>
+      <p class="muted">AQA's actual exam papers are copyright, so this trainer uses original AQA-style questions. Download the genuine papers &amp; mark schemes free from:</p>
+      <div class="linkbox">
+        <a href="https://www.aqa.org.uk/subjects/mathematics/level-three/mathematics-1350/assessment-resources" target="_blank" rel="noopener">AQA official papers</a>
+        <a href="https://pastpapers.co/aqa/aqa-certificate/level-3-mathematical-studies-1350" target="_blank" rel="noopener">Past papers (PDF)</a>
+        <a href="https://www.savemyexams.com/level-3/maths/aqa/mathematical-studies-core-maths/past-papers/" target="_blank" rel="noopener">Save My Exams</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="screen" id="scr-about">
+    <div class="card">
+      <h2>How this trainer works</h2>
+      <ul class="tight">
+        <li><strong>Answer on screen</strong> — tap the number pad (no keyboard needed) or type. Use the <strong>✍️ handwriting pad</strong> to work things out with your finger or Apple Pencil.</li>
+        <li><strong>Check answer</strong> marks your response against the answer sheet.</li>
+        <li>If you're wrong, you get the <strong>full worked solution</strong>, the <strong>common mistakes</strong> for that question, and a <strong>method reminder</strong>.</li>
+        <li>At the end you see which <strong>topics</strong> you're strong in and which <strong>need work</strong>.</li>
+        <li>You get a <strong>study plan</strong> with links to BBC Bitesize and GOV.UK, saved to your <strong>training log</strong> so you can tick things off.</li>
+      </ul>
+      <button class="btn primary" onclick="show('scr-start')">Back to start</button>
+    </div>
+  </section>
+
+  <!-- ============ QUESTION ============ -->
+  <section class="screen" id="scr-q">
+    <div class="progressbar"><div id="pbar" style="width:0%"></div></div>
+    <p class="muted" id="qcounter" style="text-align:center;margin:6px 0 0;"></p>
+    <div class="card">
+      <div class="qmeta">
+        <span class="tag" id="qtopic"></span>
+        <span class="tag marks" id="qmarks"></span>
+      </div>
+      <div id="qbody"></div>
+
+      <!-- numeric answer -->
+      <div id="numericArea">
+        <div class="answer-line">
+          <label>Answer:</label>
+          <div class="ansfield focus" id="ansField">&nbsp;</div>
+          <span class="unit" id="ansUnit"></span>
+        </div>
+        <div class="keypad" id="keypad"></div>
+      </div>
+
+      <!-- choice answer -->
+      <div id="choiceArea" style="display:none"></div>
+
+      <!-- handwriting -->
+      <div class="padwrap" id="padwrap">
+        <div class="padhead">
+          ✍️ Working-out pad
+          <span class="spacer"></span>
+          <span class="padtools">
+            <button class="btn mini subtle" onclick="undoPad()">Undo</button>
+            <button class="btn mini subtle" onclick="clearPad()">Clear</button>
+            <button class="btn mini subtle" id="padToggle" onclick="togglePad()">Hide</button>
+          </span>
+        </div>
+        <canvas id="pad"></canvas>
+      </div>
+
+      <button class="btn accent" id="checkBtn" onclick="checkAnswer()">🧮 Check answer</button>
+      <div id="feedback"></div>
+      <button class="btn primary" id="nextBtn" style="display:none" onclick="nextQuestion()">Next question →</button>
+    </div>
+    <button class="btn subtle" onclick="confirmQuit()">Save &amp; exit to menu</button>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="screen" id="scr-results">
+    <div class="card">
+      <h2>Mock complete 🎉</h2>
+      <div class="scorebig" id="resScore">0/0</div>
+      <div class="scoresub" id="resPct"></div>
+      <hr class="sep">
+      <h3>Topic breakdown</h3>
+      <div id="topicBreakdown"></div>
+    </div>
+
+    <div class="card" id="planCard">
+      <h2>📚 Your study plan</h2>
+      <p class="muted" id="planIntro"></p>
+      <div id="planList"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn subtle" onclick="show('scr-log')">📓 View training log</button>
+      <button class="btn primary" onclick="show('scr-start')">Done</button>
+    </div>
+  </section>
+
+  <!-- ============ TRAINING LOG ============ -->
+  <section class="screen" id="scr-log">
+    <div class="card">
+      <h2>📓 Training log</h2>
+      <p class="muted">Every mock you complete is saved here with your weak topics and an action checklist. Tick actions off as you complete them.</p>
+      <div id="logBody"></div>
+      <hr class="sep">
+      <div class="btn-row">
+        <button class="btn subtle mini" onclick="exportLog()">⬇️ Export</button>
+        <button class="btn subtle mini" onclick="clearLog()">🗑️ Clear log</button>
+      </div>
+    </div>
+    <button class="btn primary" onclick="show('scr-start')">Back to start</button>
+  </section>
+
+  <footer class="foot">
+    Original practice questions in the style of AQA Level 3 Mathematical Studies (1350).
+    Not affiliated with or endorsed by AQA. For genuine papers see aqa.org.uk.
+  </footer>
+</div>
+
+<script>
+/* =========================================================================
+   TOPIC METADATA — names + official UK revision links (study plan uses these)
+   ========================================================================= */
+const TOPICS = {
+  data: {
+    name: "Analysis of data",
+    blurb: "Averages, spread, standard deviation, quartiles and outliers.",
+    links: [
+      ["BBC Bitesize — Statistics", "https://www.bbc.co.uk/bitesize/subjects/z38pycw"],
+      ["National Numeracy", "https://www.nationalnumeracy.org.uk/"]
+    ]
+  },
+  finance: {
+    name: "Maths for personal finance",
+    blurb: "Percentages, compound interest, income tax, currency and depreciation.",
+    links: [
+      ["GOV.UK — Income Tax rates", "https://www.gov.uk/income-tax-rates"],
+      ["GOV.UK — National Insurance", "https://www.gov.uk/national-insurance"],
+      ["BBC Bitesize — Percentages", "https://www.bbc.co.uk/bitesize/subjects/z38pycw"]
+    ]
+  },
+  estimation: {
+    name: "Estimation (Fermi problems)",
+    blurb: "Sensible assumptions, orders of magnitude and rough calculations.",
+    links: [
+      ["BBC Bitesize — Approximation & estimation", "https://www.bbc.co.uk/bitesize/subjects/z38pycw"]
+    ]
+  },
+  normal: {
+    name: "The Normal distribution",
+    blurb: "Standardised (z) scores and the 68–95–99.7 rule.",
+    links: [
+      ["BBC Bitesize — Maths hub", "https://www.bbc.co.uk/bitesize/subjects/z38pycw"]
+    ]
+  },
+  probability: {
+    name: "Probability & expected value",
+    blurb: "Combined probabilities and long-run expected outcomes.",
+    links: [
+      ["BBC Bitesize — Probability", "https://www.bbc.co.uk/bitesize/subjects/z38pycw"]
+    ]
+  },
+  correlation: {
+    name: "Correlation & regression",
+    blurb: "Interpreting correlation and using a line of best fit to predict.",
+    links: [
+      ["BBC Bitesize — Scatter graphs", "https://www.bbc.co.uk/bitesize/subjects/z38pycw"]
+    ]
+  }
+};
+
+/* =========================================================================
+   QUESTION BANK — original, AQA-style. Answer sheet = solution + pitfalls.
+   answer types: 'numeric' (value + tolerance, optional alt list, unit, prefix)
+                 'range'   (min..max acceptable)
+                 'choice'  (options[], correctIndex)
+   ========================================================================= */
+const QUESTIONS = [
+  {
+    topic: "data", marks: 2,
+    body: `Five students took these times, in minutes, to complete a task:<div class="datablock">12&nbsp;&nbsp; 15&nbsp;&nbsp; 9&nbsp;&nbsp; 14&nbsp;&nbsp; 20</div>Work out the <strong>mean</strong> time.`,
+    answer: { type: "numeric", value: 14, tolerance: 0.01, unit: "min" },
+    method: "Mean = (sum of values) ÷ (number of values).",
+    solution: ["Add the values: 12 + 15 + 9 + 14 + 20 = 70.", "Divide by how many there are: 70 ÷ 5 = 14."],
+    pitfalls: ["Dividing by the wrong count (there are 5 values, not 4).", "Adding up incorrectly — re-add carefully.", "Confusing the mean with the median (the middle value)."]
+  },
+  {
+    topic: "data", marks: 3,
+    body: `Using the same five times (12, 15, 9, 14, 20), work out the <strong>standard deviation</strong> to <strong>1 decimal place</strong>. (Use the population standard deviation.)`,
+    answer: { type: "numeric", value: 3.6, tolerance: 0.15, alt: [{ value: 4.1, tolerance: 0.15 }] },
+    method: "σ = √( mean of the squared deviations from the mean ).",
+    solution: [
+      "Mean = 14 (from the previous part).",
+      "Deviations from the mean: −2, 1, −5, 0, 6.",
+      "Square them: 4, 1, 25, 0, 36. Sum = 66.",
+      "Divide by n = 5: 66 ÷ 5 = 13.2.",
+      "Square root: √13.2 = 3.63… ≈ 3.6."
+    ],
+    pitfalls: [
+      "Forgetting to square-root at the end (that gives the variance, 13.2).",
+      "Dividing by n−1 = 4 gives the sample SD ≈ 4.1 — both are accepted here, but know which your exam wants.",
+      "Not squaring the deviations, or losing the negative signs before squaring."
+    ]
+  },
+  {
+    topic: "data", marks: 2,
+    body: `A data set has lower quartile Q₁ = 22 and upper quartile Q₃ = 34. Using the <strong>1.5 × IQR</strong> rule, any value <strong>above</strong> what number is an outlier?`,
+    answer: { type: "numeric", value: 52, tolerance: 0.01 },
+    method: "Upper fence = Q₃ + 1.5 × IQR, where IQR = Q₃ − Q₁.",
+    solution: ["IQR = 34 − 22 = 12.", "1.5 × 12 = 18.", "Upper fence = 34 + 18 = 52."],
+    pitfalls: ["Adding 1.5 × IQR to Q₁ instead of Q₃.", "Using 1.5 × Q₃ instead of 1.5 × IQR.", "Forgetting IQR is the difference of the quartiles, not their sum."]
+  },
+  {
+    topic: "finance", marks: 3,
+    body: `£2000 is invested in an account paying <strong>3% AER compound interest</strong>. Work out the value after <strong>4 years</strong>, to the nearest penny.`,
+    answer: { type: "numeric", value: 2251.02, tolerance: 0.05, prefix: "£" },
+    method: "Value = P × (1 + r)ⁿ, with r as a decimal and n = number of years.",
+    solution: ["r = 3% = 0.03, so multiplier = 1.03.", "Value = 2000 × 1.03⁴.", "1.03⁴ = 1.12550881.", "2000 × 1.12550881 = £2251.0176 ≈ £2251.02."],
+    pitfalls: ["Using simple interest (2000 × 0.03 × 4 = £240 interest → £2240) instead of compound.", "Multiplying by 4 × 1.03 instead of raising to the power 4.", "Rounding too early — keep full accuracy until the final answer."]
+  },
+  {
+    topic: "finance", marks: 3,
+    body: `Ravi earns a salary of <strong>£32,000</strong> per year. His personal allowance (tax-free) is <strong>£12,570</strong> and income above that is taxed at the basic rate of <strong>20%</strong>. Work out his income tax for the year.`,
+    answer: { type: "numeric", value: 3886, tolerance: 0.5, prefix: "£" },
+    method: "Taxable income = salary − personal allowance. Tax = taxable income × rate.",
+    solution: ["Taxable income = 32 000 − 12 570 = £19 430.", "Tax = 19 430 × 20% = 19 430 × 0.20 = £3886."],
+    pitfalls: ["Taxing the whole £32,000 (forgetting the tax-free personal allowance).", "Using 2% or 12% instead of 20%.", "Subtracting the tax from the allowance rather than the salary."]
+  },
+  {
+    topic: "finance", marks: 3,
+    body: `A car is bought for <strong>£15,000</strong>. It <strong>depreciates by 12% each year</strong>. Work out its value after <strong>2 years</strong>, to the nearest £.`,
+    answer: { type: "numeric", value: 11616, tolerance: 1, prefix: "£" },
+    method: "Losing 12% each year means multiplying by (1 − 0.12) = 0.88 each year.",
+    solution: ["Multiplier per year = 1 − 0.12 = 0.88.", "Value = 15 000 × 0.88² = 15 000 × 0.7744.", "= £11 616."],
+    pitfalls: ["Subtracting 12% + 12% = 24% in one go (that ignores compounding on the reduced value).", "Multiplying by 1.12 (that's a 12% increase).", "Only depreciating for one year."]
+  },
+  {
+    topic: "finance", marks: 2,
+    body: `The exchange rate is <strong>£1 = €1.17</strong>. Convert <strong>€585</strong> into pounds, to the nearest penny.`,
+    answer: { type: "numeric", value: 500, tolerance: 0.05, prefix: "£" },
+    method: "To go from euros to pounds, divide by the euros-per-pound rate.",
+    solution: ["£1 = €1.17, so £ = € ÷ 1.17.", "585 ÷ 1.17 = £500.00."],
+    pitfalls: ["Multiplying by 1.17 instead of dividing (that converts £ → €).", "Rounding the rate before dividing.", "Getting the direction of conversion the wrong way round."]
+  },
+  {
+    topic: "estimation", marks: 2,
+    body: `<strong>Estimate</strong> the number of breaths a person takes in <strong>one full day</strong>. Assume a rate of about <strong>15 breaths per minute</strong>.`,
+    answer: { type: "range", min: 18000, max: 24000, display: "≈ 21 600" },
+    method: "breaths/min × minutes/hour × hours/day.",
+    solution: ["15 breaths/min × 60 min/hour = 900 per hour.", "900 × 24 hours = 21 600 breaths per day.", "Any sensible estimate around 18 000–24 000 is fine."],
+    pitfalls: ["Forgetting there are 24 hours in a day (only multiplying to one hour).", "Mixing up seconds and minutes.", "Not being willing to round — estimation questions reward a sensible, clearly-reasoned figure."]
+  },
+  {
+    topic: "estimation", marks: 2,
+    body: `A hall measures <strong>20 m by 15 m</strong>. If each person standing needs about <strong>0.5 m²</strong> of floor space, <strong>estimate</strong> how many people can stand in the hall.`,
+    answer: { type: "range", min: 500, max: 700, display: "≈ 600" },
+    method: "Number ≈ total area ÷ area per person.",
+    solution: ["Area of hall = 20 × 15 = 300 m².", "Each person needs 0.5 m².", "300 ÷ 0.5 = 600 people."],
+    pitfalls: ["Multiplying by 0.5 instead of dividing.", "Working out the perimeter (70 m) instead of the area.", "Forgetting the units — you need area (m²), not length."]
+  },
+  {
+    topic: "normal", marks: 2,
+    body: `In a test the marks are normally distributed with <strong>mean 60</strong> and <strong>standard deviation 8</strong>. A student scores <strong>72</strong>. Work out that student's <strong>standardised (z) score</strong>.`,
+    answer: { type: "numeric", value: 1.5, tolerance: 0.01 },
+    method: "z = (value − mean) ÷ standard deviation.",
+    solution: ["z = (72 − 60) ÷ 8.", "= 12 ÷ 8 = 1.5."],
+    pitfalls: ["Dividing by the mean instead of the standard deviation.", "Subtracting the value from the mean the wrong way round (giving −1.5).", "Forgetting to divide at all."]
+  },
+  {
+    topic: "normal", marks: 2,
+    body: `Heights are normally distributed. Using the <strong>68–95–99.7 rule</strong>, approximately what <strong>percentage</strong> of values lie <strong>more than 2 standard deviations above</strong> the mean?`,
+    answer: { type: "numeric", value: 2.5, tolerance: 0.3, unit: "%" },
+    method: "95% lie within ±2 SD, so 5% lie outside — split equally between the two tails.",
+    solution: ["Within ±2 SD ≈ 95%, so outside ≈ 100 − 95 = 5%.", "That 5% is split between the two tails.", "Above +2 SD = 5% ÷ 2 = 2.5%."],
+    pitfalls: ["Giving 5% (that's both tails, not just the upper one).", "Confusing the 1 SD figure (68%) with the 2 SD figure (95%).", "Forgetting the normal curve is symmetric, so the tails are equal."]
+  },
+  {
+    topic: "probability", marks: 2,
+    body: `In a game you <strong>win £5 with probability 0.2</strong> and <strong>lose £2 with probability 0.8</strong>. Work out the <strong>expected gain per game</strong>, in pounds.`,
+    answer: { type: "numeric", value: -0.6, tolerance: 0.01, prefix: "£" },
+    method: "Expected value = Σ (outcome × its probability). Losses are negative.",
+    solution: ["Win: 0.2 × (+5) = +1.0.", "Lose: 0.8 × (−2) = −1.6.", "Expected gain = 1.0 + (−1.6) = −£0.60 (an average loss of 60p per game)."],
+    pitfalls: ["Treating the £2 loss as positive.", "Adding the outcomes without multiplying by their probabilities.", "Forgetting a negative expected value means you lose money on average."]
+  },
+  {
+    topic: "probability", marks: 2,
+    body: `Two independent events have P(A) = <strong>0.3</strong> and P(B) = <strong>0.4</strong>. Work out <strong>P(A and B)</strong>.`,
+    answer: { type: "numeric", value: 0.12, tolerance: 0.001 },
+    method: "For independent events, P(A and B) = P(A) × P(B).",
+    solution: ["Independent ⇒ multiply.", "P(A and B) = 0.3 × 0.4 = 0.12."],
+    pitfalls: ["Adding (0.3 + 0.4 = 0.7) — that would be for 'A or B' of mutually exclusive events.", "Only valid because the events are independent.", "Slipping a decimal place (0.3 × 0.4 = 0.12, not 1.2 or 0.012)."]
+  },
+  {
+    topic: "correlation", marks: 2,
+    body: `A line of best fit has equation <strong>y = 3.2 + 1.5x</strong>. Use it to <strong>predict y when x = 10</strong>.`,
+    answer: { type: "numeric", value: 18.2, tolerance: 0.01 },
+    method: "Substitute the x-value into the equation and evaluate.",
+    solution: ["y = 3.2 + 1.5 × 10.", "= 3.2 + 15 = 18.2."],
+    pitfalls: ["Multiplying 1.5 by x but forgetting to add the intercept 3.2.", "Adding before multiplying (order of operations: multiply first).", "Substituting 10 for y instead of x."]
+  },
+  {
+    topic: "correlation", marks: 1,
+    body: `A scatter graph gives a correlation coefficient of <strong>r = −0.85</strong>. Which best describes the correlation?`,
+    answer: { type: "choice", options: ["Strong positive", "Strong negative", "Weak negative", "No correlation"], correctIndex: 1 },
+    method: "The sign gives the direction; how close |r| is to 1 gives the strength.",
+    solution: ["r is negative, so as one variable rises the other falls → negative.", "|−0.85| = 0.85 is close to 1 → strong.", "So: strong negative correlation."],
+    pitfalls: ["Ignoring the minus sign and calling it positive.", "Calling 0.85 'weak' — values near ±1 are strong, near 0 are weak.", "Assuming correlation proves one thing causes the other (it doesn't)."]
+  }
+];
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const LOG_KEY = "akmo_coremaths_log_v1";
+let order = [];
+let idx = 0;
+let results = [];      // {topic, correct, given, marks}
+let answered = false;
+let curInput = "";
+
+document.getElementById("qCount").textContent = QUESTIONS.length;
+
+/* =========================================================================
+   NAVIGATION
+   ========================================================================= */
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0, 0);
+  if (id === "scr-log") renderLog();
+}
+
+function startMock() {
+  order = QUESTIONS.map((_, i) => i);
+  idx = 0;
+  results = [];
+  document.getElementById("headPill").textContent = "Mock in progress";
+  loadQuestion();
+  show("scr-q");
+}
+
+function confirmQuit() {
+  if (results.length > 0) {
+    if (!confirm("Exit to menu? Your progress on this mock won't be saved to the log unless you finish it.")) return;
+  }
+  document.getElementById("headPill").textContent = "Ready";
+  show("scr-start");
+}
+
+/* =========================================================================
+   QUESTION RENDERING
+   ========================================================================= */
+function loadQuestion() {
+  answered = false;
+  curInput = "";
+  const q = QUESTIONS[order[idx]];
+
+  // progress
+  document.getElementById("pbar").style.width = ((idx) / QUESTIONS.length * 100) + "%";
+  document.getElementById("qcounter").textContent = `Question ${idx + 1} of ${QUESTIONS.length}`;
+  document.getElementById("qtopic").textContent = TOPICS[q.topic].name;
+  document.getElementById("qmarks").textContent = q.marks + " mark" + (q.marks > 1 ? "s" : "");
+  document.getElementById("qbody").innerHTML = `<div class="qtext">${q.body}</div>`;
+
+  // reset feedback / buttons
+  document.getElementById("feedback").innerHTML = "";
+  document.getElementById("nextBtn").style.display = "none";
+  const chk = document.getElementById("checkBtn");
+  chk.style.display = "block";
+  chk.disabled = false;
+
+  const numericArea = document.getElementById("numericArea");
+  const choiceArea = document.getElementById("choiceArea");
+
+  if (q.answer.type === "choice") {
+    numericArea.style.display = "none";
+    choiceArea.style.display = "block";
+    choiceArea.innerHTML = q.answer.options.map((opt, i) =>
+      `<button class="btn choice" data-i="${i}" onclick="selectChoice(${i})">${opt}</button>`).join("");
+  } else {
+    choiceArea.style.display = "none";
+    numericArea.style.display = "block";
+    document.getElementById("ansUnit").textContent = q.answer.unit || "";
+    renderKeypad(q);
+    updateField();
+  }
+
+  resizePad();
+  clearPad();
+  showPad(true);
+}
+
+let selectedChoice = -1;
+function selectChoice(i) {
+  if (answered) return;
+  selectedChoice = i;
+  document.querySelectorAll("#choiceArea .choice").forEach((b, j) =>
+    b.classList.toggle("sel", j === i));
+}
+
+function renderKeypad(q) {
+  const prefix = q.answer.prefix || "";
+  const keys = ["7","8","9","del","4","5","6","clr","1","2","3","neg","0",".","ok"];
+  const kp = document.getElementById("keypad");
+  kp.innerHTML = "";
+  keys.forEach(k => {
+    const b = document.createElement("button");
+    b.className = "key";
+    if (k === "del") { b.classList.add("del"); b.innerHTML = "⌫"; b.onclick = () => press("del"); }
+    else if (k === "clr") { b.classList.add("act"); b.textContent = "C"; b.onclick = () => press("clr"); }
+    else if (k === "neg") { b.classList.add("act"); b.textContent = "±"; b.onclick = () => press("neg"); }
+    else if (k === "ok") { b.classList.add("act", "wide"); b.textContent = "Enter"; b.onclick = () => checkAnswer(); }
+    else { b.textContent = k; b.onclick = () => press(k); }
+    kp.appendChild(b);
+  });
+}
+
+function press(k) {
+  if (answered) return;
+  if (k === "del") curInput = curInput.slice(0, -1);
+  else if (k === "clr") curInput = "";
+  else if (k === "neg") {
+    curInput = curInput.startsWith("-") ? curInput.slice(1) : "-" + curInput;
+  }
+  else if (k === ".") { if (!curInput.includes(".")) curInput += "."; }
+  else curInput += k;
+  updateField();
+}
+
+function updateField() {
+  const q = QUESTIONS[order[idx]];
+  const prefix = q.answer.prefix || "";
+  const f = document.getElementById("ansField");
+  f.textContent = curInput === "" ? (prefix ? prefix : " ") : prefix + curInput;
+}
+
+// allow physical keyboard too
+document.addEventListener("keydown", (e) => {
+  if (!document.getElementById("scr-q").classList.contains("active")) return;
+  if (answered) { if (e.key === "Enter") nextQuestion(); return; }
+  const q = QUESTIONS[order[idx]];
+  if (q.answer.type === "choice") {
+    if (e.key === "Enter" && selectedChoice >= 0) checkAnswer();
+    return;
+  }
+  if (/[0-9]/.test(e.key)) press(e.key);
+  else if (e.key === ".") press(".");
+  else if (e.key === "-") press("neg");
+  else if (e.key === "Backspace") { e.preventDefault(); press("del"); }
+  else if (e.key === "Enter") checkAnswer();
+});
+
+/* =========================================================================
+   MARKING
+   ========================================================================= */
+function markNumeric(ans, raw) {
+  const clean = raw.replace(/[£$€,%\s]/g, "");
+  if (clean === "" || clean === "-" || clean === ".") return { ok: false, empty: true };
+  const val = parseFloat(clean);
+  if (isNaN(val)) return { ok: false, empty: true };
+  const within = (target, tol) => Math.abs(val - target) <= tol;
+  if (ans.type === "range") return { ok: val >= ans.min && val <= ans.max, val };
+  let ok = within(ans.value, ans.tolerance);
+  if (!ok && ans.alt) ok = ans.alt.some(a => within(a.value, a.tolerance));
+  return { ok, val };
+}
+
+function checkAnswer() {
+  if (answered) return;
+  const q = QUESTIONS[order[idx]];
+  let correct = false, givenDisplay = "";
+
+  if (q.answer.type === "choice") {
+    if (selectedChoice < 0) { flashPill("Pick an option first"); return; }
+    correct = selectedChoice === q.answer.correctIndex;
+    givenDisplay = q.answer.options[selectedChoice];
+  } else {
+    const m = markNumeric(q.answer, curInput);
+    if (m.empty) { flashPill("Enter an answer first"); return; }
+    correct = m.ok;
+    givenDisplay = (q.answer.prefix || "") + curInput + (q.answer.unit ? " " + q.answer.unit : "");
+  }
+
+  answered = true;
+  results.push({ topic: q.topic, correct, marks: q.marks, given: givenDisplay });
+  document.getElementById("checkBtn").disabled = true;
+  selectedChoice = -1;
+  renderFeedback(q, correct, givenDisplay);
+  document.getElementById("nextBtn").style.display = "block";
+  document.getElementById("nextBtn").textContent =
+    (idx + 1 < QUESTIONS.length) ? "Next question →" : "See my results →";
+}
+
+function renderFeedback(q, correct, given) {
+  // build the model answer display
+  let model;
+  if (q.answer.type === "choice") model = q.answer.options[q.answer.correctIndex];
+  else if (q.answer.type === "range") model = q.answer.display;
+  else model = (q.answer.prefix || "") + q.answer.value + (q.answer.unit ? " " + q.answer.unit : "");
+
+  const links = TOPICS[q.topic].links
+    .map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${t} ↗</a>`).join("");
+
+  let html = "";
+  html += `<div class="verdict ${correct ? "good" : "bad"}">${correct ? "✅ Correct!" : "❌ Not quite"}<span style="flex:1"></span></div>`;
+  if (!correct) {
+    html += `<p class="muted" style="margin-top:10px">You answered <strong>${given || "(nothing)"}</strong>. The correct answer is <strong>${model}</strong>.</p>`;
+  } else {
+    html += `<p class="muted" style="margin-top:10px">Answer: <strong>${model}</strong>. Well done — here's the full method anyway.</p>`;
+  }
+
+  html += `<div class="fbsec"><h3>🧭 Method</h3><p class="muted">${q.method}</p></div>`;
+  html += `<div class="fbsec"><h3>✍️ Worked solution (answer sheet)</h3><div class="worked"><ol>${q.solution.map(s => `<li>${s}</li>`).join("")}</ol></div></div>`;
+  html += `<div class="fbsec"><h3>⚠️ Where people go wrong</h3><div class="pitfalls"><ul class="tight">${q.pitfalls.map(p => `<li>${p}</li>`).join("")}</ul></div></div>`;
+  html += `<div class="fbsec"><h3>📚 Revise this topic</h3><div class="linkbox">${links}</div></div>`;
+
+  document.getElementById("feedback").innerHTML = html;
+  document.getElementById("feedback").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function flashPill(msg) {
+  const p = document.getElementById("headPill");
+  const old = p.textContent;
+  p.textContent = msg;
+  setTimeout(() => { p.textContent = old; }, 1400);
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { loadQuestion(); }
+  else { finishMock(); }
+}
+
+/* =========================================================================
+   RESULTS + STUDY PLAN
+   ========================================================================= */
+function topicStats() {
+  const stats = {};
+  results.forEach(r => {
+    if (!stats[r.topic]) stats[r.topic] = { correct: 0, total: 0 };
+    stats[r.topic].total++;
+    if (r.correct) stats[r.topic].correct++;
+  });
+  return stats;
+}
+
+function finishMock() {
+  document.getElementById("pbar").style.width = "100%";
+  const total = results.length;
+  const correct = results.filter(r => r.correct).length;
+  const pct = Math.round(correct / total * 100);
+
+  document.getElementById("resScore").textContent = correct + " / " + total;
+  document.getElementById("resPct").textContent =
+    pct + "% correct — " + (pct >= 80 ? "excellent work!" : pct >= 60 ? "solid, a few gaps to close." : "good start — let's target the weak spots.");
+
+  const stats = topicStats();
+  // topic breakdown
+  let bd = "";
+  Object.keys(stats).forEach(t => {
+    const s = stats[t];
+    const p = Math.round(s.correct / s.total * 100);
+    const needsWork = p < 70;
+    const col = needsWork ? "var(--warn)" : "var(--good)";
+    bd += `<div class="topicrow">
+      <span class="name">${TOPICS[t].name}</span>
+      <span class="bar"><div style="width:${p}%;background:${col}"></div></span>
+      <span class="muted" style="font-size:0.8rem;width:38px;text-align:right">${s.correct}/${s.total}</span>
+      <span class="badge ${needsWork ? "work" : "ok"}">${needsWork ? "Needs work" : "Strong"}</span>
+    </div>`;
+  });
+  document.getElementById("topicBreakdown").innerHTML = bd;
+
+  // build plan for weak topics
+  const weak = Object.keys(stats).filter(t => (stats[t].correct / stats[t].total) < 0.7);
+  const plan = buildPlan(weak, stats);
+  renderPlan(weak, plan);
+
+  // save to log
+  saveLogEntry(correct, total, pct, plan);
+
+  document.getElementById("headPill").textContent = "Ready";
+  show("scr-results");
+}
+
+function buildPlan(weak, stats) {
+  // returns array of {topic, name, actions:[{text, done:false}]}
+  return weak.map(t => {
+    const s = stats[t];
+    const linkNames = TOPICS[t].links.map(l => l[0]).join(" and ");
+    return {
+      topic: t,
+      name: TOPICS[t].name,
+      actions: [
+        { text: `Read the notes on "${TOPICS[t].name}" (${TOPICS[t].blurb})`, done: false },
+        { text: `Work through ${linkNames} on this topic`, done: false },
+        { text: `Re-do the ${s.total - s.correct} question(s) you missed in this topic, writing out every step`, done: false },
+        { text: `Attempt 3–5 more practice questions on "${TOPICS[t].name}" from a past paper`, done: false }
+      ]
+    };
+  });
+}
+
+function renderPlan(weak, plan) {
+  const intro = document.getElementById("planIntro");
+  const list = document.getElementById("planList");
+  if (weak.length === 0) {
+    intro.textContent = "You're strong across every topic in this mock — brilliant! Keep momentum with a full past paper under timed conditions.";
+    list.innerHTML = `<div class="plan-item"><h3>Keep it up 🚀</h3>
+      <div class="checkline"><input type="checkbox"><label>Sit a full AQA 1350 past paper under timed conditions.</label></div>
+      <div class="checkline"><input type="checkbox"><label>Review the mark scheme and check your working matches the method marks.</label></div></div>`;
+    return;
+  }
+  intro.innerHTML = `You need most help with: <strong>${weak.map(t => TOPICS[t].name).join(", ")}</strong>. Here's a focused plan — it's saved to your training log so you can tick things off.`;
+  list.innerHTML = plan.map(p => `
+    <div class="plan-item">
+      <h3>${p.name}</h3>
+      ${p.actions.map(a => `<div class="checkline"><input type="checkbox" disabled><label>${a.text}</label></div>`).join("")}
+      <div class="linkbox" style="margin-top:8px">
+        ${TOPICS[p.topic].links.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener">${t} ↗</a>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+/* =========================================================================
+   TRAINING LOG  (localStorage)
+   ========================================================================= */
+function readLog() {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }
+  catch (e) { return []; }
+}
+function writeLog(arr) {
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+
+function saveLogEntry(correct, total, pct, plan) {
+  const log = readLog();
+  const now = new Date();
+  log.unshift({
+    id: now.getTime(),
+    date: now.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) +
+          " " + now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    correct, total, pct,
+    plan: plan.map(p => ({ name: p.name, topic: p.topic, actions: p.actions }))
+  });
+  writeLog(log);
+}
+
+function renderLog() {
+  const log = readLog();
+  const body = document.getElementById("logBody");
+  if (log.length === 0) {
+    body.innerHTML = `<p class="muted">No mocks completed yet. Finish a mock and it'll appear here with your action plan.</p>`;
+    return;
+  }
+  body.innerHTML = log.map((e) => {
+    const planHtml = e.plan.length === 0
+      ? `<p class="muted" style="margin-top:6px">✅ No weak topics flagged — great result!</p>`
+      : e.plan.map((p, pi) => `
+          <div style="margin-top:8px">
+            <strong style="color:var(--brand)">${p.name}</strong>
+            ${p.actions.map((a, ai) => `
+              <div class="checkline ${a.done ? "done" : ""}">
+                <input type="checkbox" ${a.done ? "checked" : ""} onchange="toggleAction(${e.id}, ${pi}, ${ai}, this.checked)">
+                <label>${a.text}</label>
+              </div>`).join("")}
+          </div>`).join("");
+    return `<div class="logentry">
+        <div class="row">
+          <span class="date">${e.date}</span>
+          <span class="spacer"></span>
+          <span class="badge ${e.pct >= 70 ? "ok" : "work"}">${e.correct}/${e.total} · ${e.pct}%</span>
+        </div>
+        ${planHtml}
+      </div>`;
+  }).join("");
+}
+
+function toggleAction(entryId, pi, ai, checked) {
+  const log = readLog();
+  const e = log.find(x => x.id === entryId);
+  if (!e) return;
+  e.plan[pi].actions[ai].done = checked;
+  writeLog(log);
+  renderLog();
+}
+
+function exportLog() {
+  const log = readLog();
+  if (log.length === 0) { alert("Nothing to export yet."); return; }
+  let txt = "CORE MATHS MOCK — TRAINING LOG\n(AQA-style Level 3 Mathematical Studies)\n\n";
+  log.forEach(e => {
+    txt += `${e.date} — scored ${e.correct}/${e.total} (${e.pct}%)\n`;
+    if (e.plan.length === 0) txt += "  No weak topics — great result!\n";
+    e.plan.forEach(p => {
+      txt += `  Topic to improve: ${p.name}\n`;
+      p.actions.forEach(a => { txt += `    [${a.done ? "x" : " "}] ${a.text}\n`; });
+    });
+    txt += "\n";
+  });
+  const blob = new Blob([txt], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "core-maths-training-log.txt";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function clearLog() {
+  if (!confirm("Delete your entire training log? This can't be undone.")) return;
+  writeLog([]);
+  renderLog();
+}
+
+/* =========================================================================
+   HANDWRITING SCRATCHPAD
+   ========================================================================= */
+const pad = document.getElementById("pad");
+const ctx = pad.getContext("2d");
+let drawing = false, strokes = [], curStroke = null;
+
+function resizePad() {
+  const rect = pad.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  pad.width = rect.width * dpr;
+  pad.height = 220 * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  redraw();
+}
+function redraw() {
+  ctx.clearRect(0, 0, pad.width, pad.height);
+  ctx.strokeStyle = "#0f3d5c";
+  ctx.lineWidth = 2.4;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  strokes.forEach(st => {
+    ctx.beginPath();
+    st.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+  });
+}
+function padPos(e) {
+  const r = pad.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x: t.clientX - r.left, y: t.clientY - r.top };
+}
+function startDraw(e) { e.preventDefault(); drawing = true; curStroke = [padPos(e)]; strokes.push(curStroke); }
+function moveDraw(e) { if (!drawing) return; e.preventDefault(); curStroke.push(padPos(e)); redraw(); }
+function endDraw() { drawing = false; }
+
+pad.addEventListener("pointerdown", startDraw);
+pad.addEventListener("pointermove", moveDraw);
+window.addEventListener("pointerup", endDraw);
+
+function clearPad() { strokes = []; redraw(); }
+function undoPad() { strokes.pop(); redraw(); }
+let padVisible = true;
+function showPad(v) {
+  padVisible = v;
+  pad.style.display = v ? "block" : "none";
+  document.getElementById("padToggle").textContent = v ? "Hide" : "Show";
+}
+function togglePad() { showPad(!padVisible); }
+window.addEventListener("resize", resizePad);
+</script>
+</body>
+</html>
